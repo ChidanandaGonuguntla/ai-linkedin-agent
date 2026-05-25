@@ -1,0 +1,52 @@
+server:
+  port: 8089
+
+spring:
+  application:
+    name: ai-linkedin-agent
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/ai_linkedin_agent}
+    username: ${SPRING_DATASOURCE_USERNAME:agent_user}
+    password: ${SPRING_DATASOURCE_PASSWORD:agent_password}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+agent:
+  scheduler:
+    enabled: true
+    cron: ${AGENT_CRON:0 0 8 * * *}
+  crawler:
+    max-articles-per-run: ${AGENT_MAX_ARTICLES_PER_RUN:40}
+    connect-timeout-ms: 10000
+    max-content-chars: 12000
+  llm:
+    provider: ${AGENT_LLM_PROVIDER:ollama}
+    ollama-url: ${AGENT_LLM_OLLAMA_URL:http://localhost:11434}
+    ollama-model: ${AGENT_LLM_OLLAMA_MODEL:llama3.2:3b}
+    openai-api-key: ${OPENAI_API_KEY:}
+    openai-model: ${OPENAI_MODEL:gpt-4o-mini}
+
+app:
+  security:
+    api-token: ${APP_API_TOKEN:change-me-local-token}
+
+linkedin:
+  client-id: ${LINKEDIN_CLIENT_ID:}
+  client-secret: ${LINKEDIN_CLIENT_SECRET:}
+  redirect-uri: ${LINKEDIN_REDIRECT_URI:http://localhost:8089/api/linkedin/oauth/callback}
+  api-version: ${LINKEDIN_API_VERSION:202605}

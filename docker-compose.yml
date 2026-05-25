@@ -1,0 +1,46 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: ai-linkedin-agent-postgres
+    environment:
+      POSTGRES_DB: ai_linkedin_agent
+      POSTGRES_USER: agent_user
+      POSTGRES_PASSWORD: agent_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U agent_user -d ai_linkedin_agent"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ai-linkedin-agent-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+
+  app:
+    build: .
+    container_name: ai-linkedin-agent-app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      ollama:
+        condition: service_started
+    ports:
+      - "8089:8089"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/ai_linkedin_agent
+      SPRING_DATASOURCE_USERNAME: agent_user
+      SPRING_DATASOURCE_PASSWORD: agent_password
+      AGENT_LLM_OLLAMA_URL: http://ollama:11434
+      APP_API_TOKEN: change-me-local-token
+
+volumes:
+  postgres_data:
+  ollama_data:
